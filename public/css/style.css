@@ -1,0 +1,46 @@
+body {
+  background-color: #19401E;
+  color: white;
+}
+
+.center {
+  width:50%; 
+  margin:0 auto;  
+  text-align: center;
+}
+
+.lang {
+  width:100%;
+}
+
+.lang img {
+  width: 70px;
+}
+
+.logo {
+  padding-top: 35px;
+  padding-bottom: 15px;
+}
+
+.logo img {
+  max-width: 100%;
+}
+
+.info {
+  width: 90%;
+  font-size: 120%;
+  padding-bottom: 30px;
+}
+
+.call-link {
+  color: #19401E;
+  width: 100%
+}
+
+.btn-call {
+  width: 230px; 
+}
+
+.btn-call img {
+  width: 30px;
+}
