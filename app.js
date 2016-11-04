@@ -8,11 +8,12 @@ every time you connect to a WiFi network.
 var express = require('express');
 var bodyParser = require('body-parser');
 var mysql = require("mysql");
-//var Logger = require('le_node');
 
+//var Logger = require('le_node');
 function Logger(opts) {
   function writeLog(type, msg) {
-    console.log(type + ': ' + msg);
+    var ts = new Date().toISOString().substring(0, 19);
+    console.log(ts + ' ' + type + ': ' + msg);
   }
 
   this.verbose = function(msg) { writeLog('verbose', msg); }
@@ -20,6 +21,7 @@ function Logger(opts) {
   this.warning = function(msg) { writeLog('warning', msg); }
   this.error = function(msg) { writeLog('error', msg); }
 } 
+
 
 var log = new Logger({
  token:'b005f95f-a93c-4c6a-9fc8-14e686037622'
@@ -35,12 +37,15 @@ app.use(bodyParser.json());                        // to support JSON-encoded bo
 app.use(bodyParser.urlencoded({extended: true})); // to support URL-encoded bodies
 
 var db = {
+  connectionLimit : 100,
   host: "195.208.51.37",
   user: "auth",
   password: "rai4quaiZu6U",
-  database: "radius"
+  database: "radius",
 };
-var con = mysql.createConnection(db);
+var pool = mysql.createPool(db);
+
+// var con = mysql.createConnection(db);
 
 
 function formatTel(tel) {
@@ -52,9 +57,8 @@ function isAuthorized(mac, callback) {
     callback(false);
     return; 
   }
-
   var q = 'select * from radcheck where username = \'' + mac + '\'';
-  con.query(q, function(err,rows) {
+  pool.query(q, function(err, rows) {
     if(err) {
       log.error(err);
       return false;
@@ -88,8 +92,7 @@ var demo_options = {
 function init(identity, server_name) {
   var qd = 'SELECT start_page, page FROM devices WHERE identity = "' + identity + '" AND server_name = "' + server_name + '"';
   log.verbose(qd);
-
-  mysql.createConnection(db).query(qd, function (err, rows) {
+  pool.query(qd, function(err, rows) {
     if (err) {
       log.error(err);
     // throw err;
@@ -108,8 +111,9 @@ function init(identity, server_name) {
 }
 
 app.get('/', function (req, res) {
-  log.info("Hello World!");
-  res.render('demo', demo_options); 
+  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  log.info('Demo request from: ' + ip);
+  res.render(page, demo_options); 
 });
 
 app.get('/tel', function(req, res) {
@@ -122,12 +126,18 @@ app.get('/hotel', function(req, res) {
 
 
 app.post('/', function (req, res) {
+  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  log.info(ip + ' connection: identity=' + req.body.identity + ';hostname=' + req.body.hostname + ';hotspot=' + req.body['server-name'] +';mac=' + req.body.mac);
 
-  log.info('Connection:' +
-      '\nMikrotik: ' + req.body.identity +
-      '\nHostname: ' + req.body.hostname + 
-      '\nHotspot: ' + req.body['server-name'] +
-      '\nMAC: ' + req.body.mac);
+  if (typeof req.body.identity == 'undefined' ||
+      typeof req.body.hostname == 'undefined' ||
+      typeof req.body['server-name'] == 'undefined' ||
+      req.body.mac == '\'00.00.00.00.00.00\'') {
+
+    log.info('unknown connection');
+    res.sendStatus(200);
+    return;
+  }
 
   init(req.body.identity, req.body['server-name']);
 
@@ -146,7 +156,7 @@ app.post('/', function (req, res) {
     else {
       // mac not authorized
       var qs = 'SELECT number FROM tel_in_lock WHERE mac IS NULL OR mac=\'\' ORDER BY RAND() LIMIT 1';
-      con.query(qs, function(err,rows){
+      pool.query(qs, function(err, rows) {
         if(err) {
           log.error(err);
           //throw err;
@@ -163,7 +173,7 @@ app.post('/', function (req, res) {
           '\', server_name=\'' + req.body['server-name'] + 
           '\' WHERE number = \'' + tel + '\'';
 
-        con.query(qu, function (err, rows) {
+        pool.query(qu, function (err, rows) {
           if (err) {
             log.error(err);
            // throw err;

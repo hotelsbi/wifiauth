@@ -1,0 +1,61 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WiFi Authentication</title>
+    
+    <!-- CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="pk/style.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/script.js"></script>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+	<div class="main">
+		<div class="logo center">
+			<img src="pk/images/vector-logo.png">
+		</div>
+		<div class="info center">
+			Для подключения к сети <span style="white-space: nowrap;">Wi-Fi</span><br>наберите номер телефона
+		</div>
+
+		<div class="call-link center">
+			<a href="tel:<%= tel %>" onclick="call('<%= tel %>')">
+				<button type="button" class="btn-default btn-call btn-lg center-block">
+					<img src="img/call.png"><b> <%= tel %></b>
+					<div class="comment">Плата за звонок не взымается</div>
+				</button>
+			</a>
+		</div> 
+
+		<form name="login" method="post" action="<%= loginUrl %>">
+		<input type="hidden" name="username" value="<%= username %>" />
+		<input type="hidden" name="password" value="<%= password %>" />
+		<input type="hidden" name="dst" value="<%= dst %>" />
+		<input type="hidden" name="popup" value="false" />
+		</form>
+
+		<script type="text/javascript">
+		setInterval(check, 1000, '<%= mac %>');
+		</script>
+
+	</div>
+	<div class="footer center">
+		<span><img src="pk/images/wifi.png" width="46px"> Powered by <img src="pk/images/logo-mini.png"></span>
+	</div>
+
+</body>
+</html>
